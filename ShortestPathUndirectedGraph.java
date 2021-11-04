@@ -249,12 +249,12 @@ public class ShortestPathUndirectedGraph {
                     sshingScript_writer.write("\necho Evanescence1 | sudo -S ip route add " + "10.0.0." + elements[1] + " via " + "10.0.0." + elements[0]);
                     sshingScript_writer_del.write("\necho Evanescence1 | sudo -S ip route delete " + "10.0.0." + elements[1]);
                 }
-                //If there are 3 nodes in path then there is a gateway involved and the command is different
-                //Write the following command to script:
-                if(elements.length == 3){
-                    //destination is element[2] source is element[0] gateway is element[1]
-                    sshingScript_writer.write("\necho Evanescence1 | sudo -S ip route add " + "10.0.0." + elements[2] + " via " + "10.0.0." + elements[1]);
-                    sshingScript_writer_del.write("\necho Evanescence1 | sudo -S ip route delete " + "10.0.0." + elements[2]);
+                //If there are more than 2 nodes, this means that a gateway is involved. The gateway is always the 
+                //next hop
+                //i.e. regardless of length of path, we always provide only the next hop to current node, which is always second position in string array
+                if(elements.length > 2){
+                    sshingScript_writer.write("\necho Evanescence1 | sudo -S ip route add " + "10.0.0." + elements[elements.length-1] + " via " + "10.0.0." + elements[1]);
+                    sshingScript_writer_del.write("\necho Evanescence1 | sudo -S ip route delete " + "10.0.0." + elements[elements.length-1]);
                 }
             }
             scan.close();
