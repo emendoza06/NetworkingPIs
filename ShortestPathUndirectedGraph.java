@@ -14,8 +14,42 @@ public class ShortestPathUndirectedGraph {
     // Driver Program
     public static void main(String args[]) throws Exception
     {
+        
         //Store user input file in textFile variable
         File textFile = new File("userNetworkInput.txt");
+
+        /*Logic to parse file, insert into graph function in new.gv file. Then executes command 
+        to open png file*/
+        writeToGVFile(textFile);
+        openPngFile();
+        
+
+        /*Logic to read user text file, display a png image of graph, and confirm with 
+        user that this is the graph they intended*/
+        Scanner sc = new Scanner(System.in);
+        char choice;
+
+        System.out.println();
+        System.out.println("-------------------------------------------");
+        do{
+            System.out.println("Please view the image of the graph");
+            Thread.sleep(500);
+            System.out.println("Proceed with node configuration? Confirm[Y/N]: ");
+
+            choice = sc.next().charAt(0);
+            choice = Character.toUpperCase(choice);
+        }while(choice != 'Y' && choice != 'N');
+
+
+        switch(choice){
+            case 'N' : System.out.println("Please edit text file with desired topology. Then, restart program");
+                System.exit(0);
+                break;
+            case 'Y' : System.out.println("Proceeding with program");
+                break;
+        }
+      
+
         
         //Scan textfile 
         Scanner scan = new Scanner(textFile);
@@ -78,12 +112,180 @@ public class ShortestPathUndirectedGraph {
             }
             path_writer.close(); //close after we are done writing to file
         }
+
+        scan.close();
        
         //Now that we have all paths stored in individual pi's config files, we can create 
         //a script for each PI
         createScriptsForEachPi(amount_of_config_files);
+
+
+        /**====================================================
+         * ====================================================
+         * ==========Script to run tests on routes=============
+         * ====================================================
+         */
+
+        //Ask user if they would like to run test on route 
+        char test_route_choice;
+
+        System.out.println();
+        System.out.println("-------------------------------------------");
+        
+        do{
+            Thread.sleep(500);
+            System.out.println("Would you like to run tests on a route?[Y/N]: ");
+
+            sc.nextLine();
+            test_route_choice = sc.next().charAt(0);
+            test_route_choice = Character.toUpperCase(test_route_choice);
+
+            if(test_route_choice == 'N'){
+                System.out.println("Node configuration complete. Program terminated.");
+                System.exit(0);
+            }
+            else if(test_route_choice == 'Y'){
+                getUserInputRouteToTest(sc);
+            }
+        }while(test_route_choice == 'Y' || test_route_choice != 'Y');
+    }
+
+   
+    
+    //function to ask user which route we will be testing and fetching data from 
+    //then make a script to ssh into
+    public static void getUserInputRouteToTest(Scanner sc) throws Exception{  
+        
+        sc.nextLine();
+        //get route user wants to test 
+        int source_node = 0;
+        int dest_node = 0;
+        System.out.println("Enter a route to test in the following format: s,d. Where s is the number of the source node and d is the number of the destination node.");
+        source_node = sc.nextInt();
+        dest_node = sc.nextInt();
+
+        System.out.println("Running test on route " + source_node + "--" + dest_node);
+
+        //runRouteTests(source_node, dest_node);
+        runProcess("chmod 777 ./Non-deletables/pingScript1.sh");
+        runProcess("./Non-deletables/pingScript1.sh");
+        getPingData(source_node, dest_node);
+    }
+
+    //This function calls getPingData, getTracerouteData, and getScpData
+    public static void runRouteTests(int source_node, int dest_node) throws Exception{
+        getPingData(source_node, dest_node);
+    }
+
+    
+    //function to run ping command, pipe data into output file, search file for times and save
+    //to .dat file which gnuplot will read from
+    public static void getPingData(int source_node, int dest_node) throws Exception{
+        //Create the script to ping and redirect output into a text file 
+        // runProcess("touch pingScript.sh");
+        // runProcess("chmod 777 ./pingScript.sh");
+        
+        // //write to ping script
+        // FileWriter ping_script_writer = new FileWriter("pingScript.sh");
+        // //ping script
+        // ping_script_writer.write("#!/bin/bash");
+        // ping_script_writer.write("\nping 10.0.0." + dest_node + " -c 10 > pingOutput.txt");
+        // ping_script_writer.close();
+
+        // //run ping script from source node 
+        // runProcess("touch sshingScriptForPi" + source_node + ".sh");
+        // //write to sshingScript
+        // FileWriter sshing_script_writer = new FileWriter("sshingScriptForPi" + source_node + ".sh");
+        // sshing_script_writer.write("#!/bin/bash\n");
+        // sshing_script_writer.write("cd ~\n");
+        // sshing_script_writer.write("ssh epharra" + source_node + "@10.0.0." + source_node + " 'bash -s' < Projects/NetworkingResearch/pingScript.sh");
+        
+        // sshing_script_writer.close();
+
+        // runProcess("./sshingScriptForPi" + source_node + ".sh");
+
+
+        // Create file that gnuplot will read from
+        runProcess("touch pingData.dat");
+
+        //Read from pingOutput.txt file
+        File textFile = new File("pingOutput.txt");
+        Scanner sc = new Scanner(textFile);
+        Scanner sc_for_avg = new Scanner(textFile);
+
+        // Write to pingData.dat, which is the file gnuplot will graph from
+        FileWriter ping_writer = new FileWriter("pingData.dat");
+        String nextLine = "";
+        String avgRttLine = "";
+        int currentLineNumber = 0;
+
+        //Scan file and find average rtt 
+        while(sc_for_avg.hasNextLine()){
+            nextLine = sc_for_avg.nextLine();
+            currentLineNumber++;
+            if(currentLineNumber == 15){
+                avgRttLine = nextLine.substring(39, 45);
+            }
+        }
+        sc_for_avg.close();
+
+        currentLineNumber = 0;
+        //Insert data into pingData.dat line by line
+        while(sc.hasNextLine()){
+            
+            nextLine = sc.nextLine();
+            currentLineNumber++;
+            if(currentLineNumber >=2 && currentLineNumber < 12){
+                if(currentLineNumber != 11){
+                    ping_writer.write(currentLineNumber-1 + "\t" + nextLine.substring(47,53) + "\t" + avgRttLine + "\n");
+                    
+                }
+                else{
+                    ping_writer.write(currentLineNumber-1 + "\t" + nextLine.substring(47,53) + "\t" + avgRttLine);
+                }
+            }
+        }
+
+         sc. close();
+         ping_writer.close();
+
+         //run gnuplot script reading from pingData.dat file
+         runProcess("gnuplot -p ./Non-deletables/gnuplotPingScript.gp");
+
     }
  
+    //function to create png file, graphviz command to create graph image, then opens new.png file
+    public static void openPngFile() throws Exception{
+        runProcess("neato -Tpng new.gv -o new.png");
+        Thread.sleep(1000);
+        runProcess("open new.png");
+    }
+    //function to create new.gv file, write to file in the necessary "a--b" format
+    //and opens resulting png image
+    public static void writeToGVFile(File textFile) throws Exception{
+        //Scanner object to read from textFile
+        Scanner graph_file_scanner = new Scanner(textFile);
+        //Create new.gv file
+        runProcess("touch new.gv");
+        //File writer to new.gv file
+        FileWriter graph_writer = new FileWriter("new.gv");
+
+        //Write first line of new.gv 
+        graph_writer.write("graph foo {");
+
+        //Scan first int which is the # of nodes. We don't need to do anything with this
+        graph_file_scanner.nextInt();
+
+        //Start scanning remainder of text file
+        while(graph_file_scanner.hasNextInt()){
+            graph_writer.write("\n");
+            graph_writer.write("\t" + graph_file_scanner.nextInt() + " -- " + graph_file_scanner.nextInt() + ";");
+        }
+        graph_writer.write("\n}");
+        
+        graph_file_scanner.close();
+        graph_writer.close();
+    }
     // function to form edge between two vertices
     // source and dest
     private static void addEdge(ArrayList<ArrayList<Integer>> adj, int i, int j)
@@ -299,11 +501,12 @@ public class ShortestPathUndirectedGraph {
          for(int i = 0; i < pis_in_network; i++){
             runProcess("./sshingScriptForPi" + (i+1) + ".sh");
         }
+        scan.close();
     }
 
     //method that takes terminal commands and runs them on local device
     private static void runProcess(String command) throws Exception {
-        //process waits for each command t be executed and stores any outputs we get from terminal
+        //process waits for each command to be executed and stores any outputs we get from terminal
         Process pro = Runtime.getRuntime().exec(command);
         //print any errors
         try{
