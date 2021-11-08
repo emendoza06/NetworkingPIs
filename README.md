@@ -1,3 +1,11 @@
+ADDITIONAL INSTALLATIONS: 
+    1. graphviz (https://graphviz.org/download/)
+        -Displays a png image of the graph
+    2. gnuplot (https://www.youtube.com/watch?v=u5OJdUTakns)
+        -Displays line graphs of data collected
+    
+    
+
 ASSUMPTIONS:
     1. Assumes local device has ssh keys stored in home directory in order to ssh into Pi's without the need for a password
     2. Assumes PI's are on and running 
@@ -10,6 +18,7 @@ ASSUMPTIONS:
 RUNNING PROGRAM:
     -a file with the name of "userNetworkInput.txt" must be included to read user graph info
     -run ShortestPathUndirectedGraph.java to start program
+    -Refresh project folder in order to see the new files that have been created
 
 
 FILE DESCRIPTIONS: 
