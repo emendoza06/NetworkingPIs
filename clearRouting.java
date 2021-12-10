@@ -4,6 +4,6 @@ public class clearRouting {
 
         String scriptToRun = "removeRoutingInPi";
 
-        ShortestPathUndirectedGraph.sshIntoPiAndRunScript(scriptToRun);
+        ShortestPathUndirectedGraph.sshIntoPiAndRunRoutingScript(scriptToRun);
     }
 }

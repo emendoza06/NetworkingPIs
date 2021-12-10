@@ -10,9 +10,13 @@ ASSUMPTIONS:
     1. Assumes local device has ssh keys stored in home directory in order to ssh into Pi's without the need for a password
     2. Assumes PI's are on and running 
     3. Assumes user input file has the name "userNetworkInput.txt" and is stored in project folder
-    4. Assumes device we are running program on is connected to Pi's adhoc network
+    4. Assumes device we are running program on is connected to Pi's adhoc network. 
+    IMPORTANT: Local device connecting to ad hoc network will NOT automatically be assigned IP address. You must manually give deivce an IP address within the subwork 10.0.0.X
     5. Assumes Pi's have already been set up as routers and can be used as gateways in routing table
-    6. Assumes that any one Pi in the network is accessible by any other Pi, whether direct or indirect
+    6. Assumes gnuplot is installed on each PI
+    7. Assumes plot script and gnuplot script are already on PI devices
+    8. Assumes graphviz is installed on local device and accessible by running Java program
+    
     
 
 RUNNING PROGRAM:
