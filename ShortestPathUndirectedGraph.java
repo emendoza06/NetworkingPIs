@@ -116,7 +116,7 @@ public class ShortestPathUndirectedGraph {
         //Now that we have all paths stored in individual pi's config files, we can create 
         //a script for each PI
         createScriptsForEachPi(amount_of_config_files);
-        runPingTest(pis_in_network);
+        runPingAndSCPTest(pis_in_network);
     }
 
  
@@ -357,17 +357,17 @@ public class ShortestPathUndirectedGraph {
     }
 
 
-    private static void runPingTest(int pis_in_network) throws Exception{
+    private static void runPingAndSCPTest(int pis_in_network) throws Exception{
         //create sshing script for pis to run their ping test script
-        runProcess("touch sshingScriptForPingTest.sh");
+        runProcess("touch sshingScriptForPingAndSCPTest.sh");
         //Give permissions
-        runProcess("chmod 777 ./sshingScriptForPingTest.sh");
+        runProcess("chmod 777 ./sshingScriptForPingAndSCPTest.sh");
 
         System.out.println("\n\n");
-        System.out.println("...Running Ping Test within Pi's...");
+        System.out.println("...Running Ping Test & SCP test within Pi's...");
             //write to singular script file the sshing commands
             //We only need 1 master script to hold all sshing commands
-            FileWriter sshingScript_writer = new FileWriter("sshingScriptForPingTest.sh"); 
+            FileWriter sshingScript_writer = new FileWriter("sshingScriptForPingAndSCPTest.sh"); 
             
             //First line of script
             sshingScript_writer.write("#!/bin/bash");
@@ -376,11 +376,12 @@ public class ShortestPathUndirectedGraph {
             for(int i = 0; i < pis_in_network; i++){
                 //ssh and pass script to run
                 sshingScript_writer.write("\nssh epharra" + (i+1) +"@10.0.0." + (i+1)+ " 'bash ~/pingTest.sh'");
+                sshingScript_writer.write("\nssh epharra" + (i+1) +"@10.0.0." + (i+1)+ " 'bash ~/SCPTest.sh'");
             }
             sshingScript_writer.close();
 
          //Execute script to ssh into pis and run their local ./pingTest.sh file
-            runProcess("./sshingScriptForPingTest.sh");
+            runProcess("./sshingScriptForPingAndSCPTest.sh");
     }
 
     //method that takes terminal commands and runs them on local device
